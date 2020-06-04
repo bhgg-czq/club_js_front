@@ -12,7 +12,7 @@
               <el-menu default-active="1" class="el-menu-vertical-demo" @select="handleSelect">
                 <el-submenu index="1">
                   <template slot="title">
-                    <i class="el-icon-user"></i>
+                    <i class="el-icon-user-solid"></i>
                     <span>成员管理</span>
                   </template>
                   <el-menu-item-group>
@@ -21,20 +21,23 @@
                   </el-menu-item-group>
                 </el-submenu>
 
+                <el-submenu index="3">
+                  <template slot="title">
+                    <i class="el-icon-s-management"></i>
+                    <span>活动管理</span>
+                  </template>
+                  <el-menu-item-group>
+                    <el-menu-item index="3-1" @click="getActivity(1)">已审核</el-menu-item>
+                    <el-menu-item index="3-2" @click="getActivity(0)">待审核</el-menu-item>
+                  </el-menu-item-group>
+                </el-submenu>
+
                 <el-menu-item index="2" @click="toPassage">
                   <i class="el-icon-s-promotion"></i>
                   <span slot="title">推送发布</span>
                 </el-menu-item>
 
-                <el-menu-item index="3">
-                  <i class="el-icon-edit-outline"></i>
-                  <span slot="title">活动申请</span>
-                </el-menu-item>
 
-                <el-menu-item index="4">
-                  <i class="el-icon-s-order"></i>
-                  <span slot="title">往期概览</span>
-                </el-menu-item>
 
               </el-menu>
             </el-col>
@@ -44,6 +47,10 @@
         <member-box v-if="choice == 1" :key="time" style="width: 100%"></member-box>
         <passage-box v-if="choice == 2" style="width: 100%"></passage-box>
 
+        <activity-box v-if="choice == 3" :key="time" style="width: 100%" @my-check="getMyCheck"></activity-box>
+
+        <progress-box v-if="choice == 4" :key="time" style="width: 100%"></progress-box>
+
       </el-container>
     </el-container>
   </div>
@@ -51,14 +58,19 @@
 
 <script>
 
-  import  Member from '../../components/Member.vue'
-  import Passage from "../../components/Passage.vue";
+  import Member from '../../components/Member.vue'
+  import Passage from "../../components/Passage.vue"
+  import Activity from '../../components/Activity.vue'
+  import Progress from '../../components/Progress.vue'
 
   export default {
     name:'Member',
     data() {
       return {
-        choice:1,   //导入的组件，1为member，2为 passage，默认为1
+        //导入的组件，1为member，2为 passage，3为activity，默认为1
+        choice:1,
+
+        msg:'',
 
         time:''
       };
@@ -66,12 +78,21 @@
 
     components: {
       'member-box':Member,
-      'passage-box':Passage
+      'passage-box':Passage,
+      'activity-box':Activity,
+      'progress-box':Progress
     },
 
     created() {},
 
     methods: {
+      //监听来自活动审核时的页面切换
+      getMyCheck(msg){
+        this.msg=msg
+        localStorage.setItem('msg',this.msg)
+        this.choice=4;
+      },
+
       //选中的当前菜单
       handleSelect() {
         console.log("选中");
@@ -87,6 +108,13 @@
       //获得推送表的组件
       toPassage(){
         this.choice=2;
+      },
+
+      //获得活动的组件
+      getActivity(st){
+        localStorage.setItem('type',st)
+        this.choice=3;
+        this.time=new Date().getTime()
       },
 
       onSubmit(row) {}
@@ -108,6 +136,7 @@
     color: #333;
     text-align: center;
     line-height: 200px;
+    min-height:615px ;
   }
   .el-col {
     border-radius: 4px;
