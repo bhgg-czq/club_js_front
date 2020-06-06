@@ -36,8 +36,8 @@
 
         <el-col :span="8" v-if="this.value == 'error'">
           <el-card class="box-card1">
-            <el-alert v-for="item in notPassList" :key="item.id"
-              :title=item.name
+            <el-alert v-for="item in notPassList" :key="item.aId"
+              :title=item.items.name
               type="error"
               :description=item.reason
               show-icon>
@@ -50,7 +50,7 @@
       <!--活动场地申请弹出框-->
       <div class="dialogs">
         <el-dialog title="活动场地申请" :visible.sync="addDialogFormVisible" style="width:1100px; left:200px; top:10px">
-          <el-form :model="ruleForm" :rules="rules" ref="ruleForm" label-width="100px" class="demo-ruleForm">
+          <el-form :model="ruleForm" ref="ruleForm" label-width="100px" class="demo-ruleForm">
 
             <el-form-item label="活动时间" required>
               <el-date-picker
@@ -67,9 +67,9 @@
               <el-select v-model="ruleForm.className" filterable @focus="getAvailableList">
                 <el-option
                   v-for="item in allList"
-                  :key="item.id"
+                  :key="item.roomid"
                   :label="item.name"
-                  :value="item.id"
+                  :value="item.roomid"
                   :disabled="item.disabled">
                 </el-option>
               </el-select>
@@ -114,7 +114,8 @@
       created() {
           this.msg=localStorage.getItem('msg');
 
-          if(localStorage.getItem('apass')){
+          console.log(localStorage.getItem('apass'))
+          if(localStorage.getItem('apass')==='true'){
             this.step=2;
             console.log(this.step)
           }
@@ -125,23 +126,24 @@
           this.getWaitPass();
 
          // 判断步骤三状态，若有数据则状态为失败
-       //   this.getNotPass();
+          this.getNotPass();
       },
       methods:{
         //waittoPass(正在审核的场地）
         getWaitPass(){
           this.axios.get("http://localhost:3000/leader/classroom/waitPass?aid="+localStorage.getItem('aid')).then(res=>{
-            console.log(res.data)
-            // if(res.data){
-            //   var start= this.renderTime(res.data[0].starttime);
-            //   var end=this.renderTime(res.data[0].endtime);
-            //   var name=res.data[0].name;
+            console.log("dfsdfdsfdsfsdfsdfs")
+            console.log(res.data.activities)
+            if(res.data.activities.length){
+              var start= this.renderTime(res.data.activities[0].startTime);
+              var end=this.renderTime(res.data.activities[0].endTime);
+              var name=res.data.activities[0].items[0].name;
 
-            //   this.waitPass="于 "+start+" 到 "+end+" 使用 "+name+" 的场地申请已提交，请耐心等待";
+              this.waitPass="于 "+start+" 到 "+end+" 使用 "+name+" 的场地申请已提交，请耐心等待";
 
-            //   //场地选择按钮禁用
-            //   this.select=true;
-            // }
+              //场地选择按钮禁用
+              this.select=true;
+            }
 
           })
         },
@@ -152,36 +154,37 @@
         },
 
         //notPassList
-        // getNotPass(){
-        //   this.axios.get("http://localhost:3000/leader/classroom/getunPass?aid="+localStorage.getItem('aid')).then(res=>{
-        //     if(res.data){
-        //       this.notPassList=res.data;
-        //       this.step=2;
-        //       this.value='error';
-        //       console.log(this.step)
-        //     }
-        //     else{
-        //       this.notPassList=null;
-        //       console.log(this.notPassList)
-        //     }
-        //     console.log(res.data)
+        getNotPass(){
+          this.axios.get("http://localhost:3000/leader/classroom/getunPass?aid="+localStorage.getItem('aid')).then(res=>{
+            if(res.data.code.activities){
+              this.notPassList=res.data.activities;
+              this.step=2;
+              this.value='error';
+              console.log(this.step)
+            }
+            else{
+              this.notPassList=null;
+              console.log(this.notPassList)
+            }
+            //console.log(res.data)
 
-        //   })
-        // },
+          })
+        },
 
         //allList
         getRoList(){
           this.axios.get("http://localhost:3000/leader/listAllRoom").then(res=>{
-            this.allList=res.data;
+            this.allList=res.data.roomlist;
             console.log(res.data)
           })
         },
         //passList
         getPassList(){
           this.axios.get("http://localhost:3000/leader/classroom/getPass").then(res=>{
-            if(res.data)
-              this.passList=res.data;
-            console.log("fdfdf"+res.data)
+            if(res.data.code==200)
+              this.passList=res.data.activities;
+            console.log("fdfdf"+this.passList)
+            console.log(this.passList)
           })
         },
         //allList(根据所选时间进行判断加属性）
@@ -192,23 +195,25 @@
           })
 
           for(var room of this.passList){
+            console.log("fdsfdsfsdfdsfdsfs")
+            console.log(room)
             //将日期转换成时间戳进行比较
-            var start = new Date(room.starttime);
+            var start = new Date(room.startTime);
             var start1=start.getTime(start);
 
-            var end = new Date(room.endtime);
+            var end = new Date(room.endTime);
             var end1=end.getTime(end);
 
             var s = this.ruleForm.time[0]+28800000;
             var e = this.ruleForm.time[1]+28800000;
 
-            var rid=room.id;
+            var rid=room.rId;
 
             if(!(s>end1 || e<start1)){
               for(var r of this.allList){
                 console.log(r.id);
-                if(r.id==rid){
-                  console.log(r.id);
+                if(r.roomid==rid){
+                  console.log(r.roomid);
                   this.$set(r, 'disabled', true)
                   break;
                 }
@@ -231,7 +236,7 @@
           var _this=this;
           this.axios({
             method:'post',
-            url:"http://localhost:3000/activity/ckeckroom",
+            url:"http://localhost:3000/leader/activity/checkroom",
             data:{
               aid:localStorage.getItem('aid'),
               rid:this.ruleForm.className,
@@ -239,13 +244,13 @@
               end:this.ruleForm.time[1]
             }
           }).then(res=>{
-            if (res.data == 1){
+            if (res.data.code===200){
               this.$message({
                 message: '申请场地成功！'
               })
 
               for(var r of _this.allList)
-                if(r.id == _this.ruleForm.className){
+                if(r.roomid == _this.ruleForm.className){
                   var start= this.renderTime(this.ruleForm.time[0]);
                   var end=this.renderTime(this.ruleForm.time[1]);
                   var name=r.name;

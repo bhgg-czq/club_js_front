@@ -6,9 +6,9 @@
               <el-form-item label="姓名">
                 <el-input style="width: 150px" v-model="formInline.user" placeholder="姓名"></el-input>
               </el-form-item>
-              <el-form-item label="时间">
+              <!-- <el-form-item label="时间">
                 <el-date-picker v-model="formInline.date" type="date" placeholder="选择日期"></el-date-picker>
-              </el-form-item>
+              </el-form-item> -->
               <el-form-item label="分院">
                 <el-select v-model="formInline.college" placeholder="分院">
                   <el-option label="" value=""></el-option>
@@ -252,13 +252,13 @@
 
         this.axios({
           method: "post",
-          url: "http://localhost:8181/api/leader/searchmember",
+          url: "http://localhost:3000/leader/member/search",
           data: {
             //参数还没修改
             cid: this.id,
-            username:this.formInline.user,
-            joindate:this.formInline.date,
-            collegename:this.formInline.college
+            state:this.memState,
+            name:this.formInline.user,
+            college:this.formInline.college
           }
         }).then(res => {
 
