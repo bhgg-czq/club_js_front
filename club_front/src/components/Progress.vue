@@ -36,8 +36,8 @@
 
         <el-col :span="8" v-if="this.value == 'error'">
           <el-card class="box-card1">
-            <el-alert v-for="item in notPassList" :key="item.aId"
-              :title=item.items.name
+            <el-alert v-for="item in notPassList" :key="item.items[0].name"
+              :title=item.items[0].name
               type="error"
               :description=item.reason
               show-icon>
@@ -132,7 +132,6 @@
         //waittoPass(正在审核的场地）
         getWaitPass(){
           this.axios.get("http://localhost:3000/leader/classroom/waitPass?aid="+localStorage.getItem('aid')).then(res=>{
-            console.log("dfsdfdsfdsfsdfsdfs")
             console.log(res.data.activities)
             if(res.data.activities.length){
               var start= this.renderTime(res.data.activities[0].startTime);
@@ -156,11 +155,11 @@
         //notPassList
         getNotPass(){
           this.axios.get("http://localhost:3000/leader/classroom/getunPass?aid="+localStorage.getItem('aid')).then(res=>{
-            if(res.data.code.activities){
+            console.log(localStorage.getItem('aid'))
+            if(res.data.activities.length){
               this.notPassList=res.data.activities;
               this.step=2;
               this.value='error';
-              console.log(this.step)
             }
             else{
               this.notPassList=null;
@@ -288,6 +287,22 @@
   }
 
   /*卡片样式*/
+  .el-col {
+    border-radius: 4px;
+    background-color: #ffffff;
+  }
+  .el-menu-item{
+    background-color: #D3DCE6;
+    text-align: left;
+  }
+  .el-main{
+    background-color: #f2f2f2;
+  }
+  .el-steps{
+    padding-top: 100px;
+  }
+
+  /*卡片样式*/
   .el-row{
     padding-top: 20px;
     padding-left: 65px;
@@ -343,5 +358,8 @@
 
   .btn{
     text-align: right;
+  }
+  .el-alert{
+    margin-top: 8px;
   }
 </style>

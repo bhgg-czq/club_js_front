@@ -20,15 +20,15 @@
           <div class="card">
             <template>
               <el-table :data="passageList.slice((currentPage-1)*pageSize,currentPage*pageSize)" border style="width: 100%">
-                <el-table-column prop="_id" label="ID" width="55" ></el-table-column>
+                <el-table-column type="selection" width="55"></el-table-column>
+                <el-table-column prop="_id" label="ID" width="55" v-if=false></el-table-column>
                 <el-table-column prop="name" label="标题" width="180"></el-table-column>
                 <el-table-column prop="content" label="内容介绍" width="350" :show-overflow-tooltip="true"></el-table-column>
                 <el-table-column prop="url" label="推送链接" width="240" :show-overflow-tooltip="true"></el-table-column>
-                <el-table-column prop="time" label="发布时间" width="130"></el-table-column>
+                <el-table-column prop="time" :formatter="renderTime" label="发布时间" width="180"></el-table-column>
 
-                <el-table-column fixed="right" label="操作" width="180">
+                <el-table-column fixed="right" label="操作" width="180" align="center">
                   <template slot-scope="scope">
-                    <el-button @click="handleClick(scope.row.ppid)" type="primary" size="mini">编辑</el-button>
                     <el-button @click="handleRemove(scope.row._id)" type="danger" size="mini">删除</el-button>
                   </template>
                 </el-table-column>
@@ -267,8 +267,18 @@
         this.$router.replace({path: '/leader/member'})
       },
 
-      onSubmit(row) {}
-    }
+      onSubmit(row) {},
+
+      //时间转换函数
+      renderTime:function(row, column) {
+        var date = new Date(row[column.property]).toJSON();
+        if (date == undefined) {
+          return "";
+        }
+        return new Date(+new Date(date) ).toISOString().replace(/T/g, ' ').replace(/\.[\d]{3}Z/, '')
+      },
+    },
+
   };
 </script>
 

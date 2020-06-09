@@ -79,9 +79,10 @@
                 userid: this.loginForm.sno,
                 password: this.loginForm.password
               })
-              .then(successResponse => {
-                if (successResponse.data.code === 200) {
+              .then(res => {
+                if (res.data.code === 200) {
                   localStorage.setItem("id",this.loginForm.sno)
+                  localStorage.setItem("type",res.data.message)
                   this.$router.replace({path: '/admin'})
                 }
               })

@@ -22,20 +22,30 @@
             <template>
               <el-table :data="activityList.slice((currentPage-1)*pageSize,currentPage*pageSize)" border style="width: 1181.35px">
                 <el-table-column type="selection" width="55"></el-table-column>
-                <el-table-column prop="apply_date" label="申请日期" width="150"></el-table-column>
+                <el-table-column prop="apply_date" :formatter="renderTime" label="申请日期" width="150" :show-overflow-tooltip="true"></el-table-column>
                 <el-table-column prop="name" label="活动名称" width="150" :show-overflow-tooltip="true"></el-table-column>
                 <el-table-column prop="cName" label="活动地点" width="120"></el-table-column>
                 <el-table-column prop="limited" label="面向对象" width="120" :show-overflow-tooltip="true"></el-table-column>
                 <el-table-column prop="number" label="限定人数" width="120"></el-table-column>
                 <el-table-column prop="budget" label="预算" width="120"></el-table-column>
-                <el-table-column prop="start_time" label="活动时间" width="180" :show-overflow-tooltip="true"></el-table-column>
+                <el-table-column prop="start_time" :formatter="renderTime" label="活动时间" width="180" :show-overflow-tooltip="true"></el-table-column>
                 <el-table-column prop="detail" label="活动详情" width="180" :show-overflow-tooltip="true"></el-table-column>
 
-                <el-table-column fixed="right" label="操作" width="180" align="center" >
+
+                <el-table-column fixed="right" label="操作" width="220" align="center" v-if="type==0">
                   <template slot-scope="scope">
                     <el-button @click="handleCheck(scope.$index)" type="primary" size="mini">查看进度</el-button>
+                    <el-button @click="cancle(scope.$index)" type="danger" size="mini">取消申请</el-button>
                   </template>
                 </el-table-column>
+
+                <el-table-column fixed="right" label="活动状态" width="180" align="center" v-if="type==1">
+                  <template slot-scope="scope">
+                    <span v-if="scope.row.a_pass=== true" style="color: lawngreen">审核通过</span>
+                    <span v-if="scope.row.a_pass=== false" style="color: red">审核失败</span>
+                  </template>
+                </el-table-column>
+
               </el-table>
             </template>
           </div>
@@ -222,7 +232,7 @@
         else
           this.axios.get("http://localhost:3000/leader/activity/pass/?cid=" + this.id).then(res => {
             this.activityList = res.data.activities;
-            //  console.log(res.data)
+              console.log(res.data)
           })
 
 
@@ -307,11 +317,57 @@
         console.log(this.activityList[i].a_pass)
 
         this.msg=
-          '活动名称：'+this.activityList[i].cName+'<br><br>'+'活动内容：'+this.activityList[i].detail
-          +'<br><br>'+'活动人数：'+this.activityList[i].number+'<br><br>'+'预算：'+this.activityList[i].budget+'<br><br>'+'申请时间：'+this.activityList[i].apply_date
+          '活动名称：'+this.activityList[i].name+'<br><br>'+'活动内容：'+this.activityList[i].detail
+          +'<br><br>'+'活动人数：'+this.activityList[i].number+'<br><br>'+'预算：'+this.activityList[i].budget+'<br><br>'+'申请时间：'+this.renderTime1(this.activityList[i].apply_date)
 
         this.$emit('my-check',this.msg);
 
+      },
+
+      //取消活动申请
+      cancle(i){
+        this.$confirm("此操作将永久取消该活动的申请, 是否继续?", "提示", {
+          confirmButtonText: "确定",
+          cancelButtonText: "取消",
+          type: "warning"
+        })
+          .then(() => {
+              var aId=this.activityList[i]._id;
+              var _this=this;
+              this.axios.get("http://localhost:3000/leader/activity/cancel?id="+aId).then(res=>{
+                if(res.data.code==200){
+                  _this.$message({
+                    type:"success",
+                    message:"活动取消成功！"
+                  })
+                  _this.getwaitActList(_this.type);
+                }
+              })
+          })
+          .catch(() => {
+            this.$message({
+              type: "info",
+              message: "已取消删除"
+            });
+          });
+      },
+
+
+      ///时间转换函数
+      renderTime:function(row, column) {
+        var date = new Date(row[column.property]).toJSON();
+        if (date == undefined) {
+          return "";
+        }
+        return new Date(+new Date(date) ).toISOString().replace(/T/g, ' ').replace(/\.[\d]{3}Z/, '')
+      },
+
+      renderTime1:function(d) {
+        var date = new Date(d).toJSON();
+        if (date == undefined) {
+          return "";
+        }
+        return new Date(+new Date(date) ).toISOString().replace(/T/g, ' ').replace(/\.[\d]{3}Z/, '')
       },
 
       onSubmit(row) {}

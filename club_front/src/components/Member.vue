@@ -45,12 +45,12 @@
                 <el-table-column prop="items[0].stuname" label="姓名" width="120"></el-table-column>
                 <el-table-column prop="items[0].collegename" label="分院" width="220"></el-table-column>
                 <el-table-column prop="items[0].phone" label="手机号" width="180"></el-table-column>
-                <el-table-column prop="joinDate" label="入社时间" width="180"></el-table-column>
+                <el-table-column prop="joinDate" :formatter="renderTime" label="入社时间" width="210"></el-table-column>
 
-                <el-table-column fixed="right" label="操作" width="200">
+                <el-table-column fixed="right" label="操作" width="200" align="center">
                   <template slot-scope="scope">
-                    <el-button @click="handleClick(scope.row)" type="primary" size="mini">编辑</el-button>
-                    <el-button @click="handleRemove(scope.row)" type="danger" size="mini">删除</el-button>
+                    <el-button @click="handleClick(scope.row.stuid,scope.row.items[0].phone)" type="primary" size="small">编辑</el-button>
+                    <el-button @click="handleRemove(scope.row)" type="danger" size="small">删除</el-button>
                   </template>
                 </el-table-column>
               </el-table>
@@ -94,6 +94,41 @@
               </div>
             </el-dialog>
           </div>
+
+          <!--编辑社员的弹出框-->
+          <div class="editDialog">
+            <el-dialog
+              title="编辑社团成员"
+              :visible.sync="editDialogFormVisible"
+              style="width:1000px; left:300px; top:100px"
+            >
+              <el-form :model="edit">
+                <el-form-item label="学号：" :label-width="formLabelWidth">
+                  <el-input
+                    v-model="edit.id"
+                    autocomplete="off"
+                    placeholder="edit.id"
+                    :disabled="true"
+                    style="width: 300px;"
+                  ></el-input>
+                </el-form-item>
+
+                <el-form-item label="联系方式：" :label-width="formLabelWidth">
+                  <el-input
+                    v-model="edit.phone"
+                    autocomplete="off"
+                    placeholder="edit.phone"
+                    style="width: 300px;"
+                  ></el-input>
+                </el-form-item>
+              </el-form>
+              <div slot="footer" class="dialog-footer">
+                <el-button @click="editDialogFormVisible = false">取 消</el-button>
+                <el-button type="primary" @click="editMember">确 定</el-button>
+              </div>
+            </el-dialog>
+          </div>
+
         </el-main>
   </div>
 </template>
@@ -108,8 +143,14 @@
         student: {
           number: ""
         },
+        edit:{
+          id:'',
+          phone:''
+        },
+
         formLabelWidth: "100px",
         addDialogFormVisible: false,
+        editDialogFormVisible:false,
         id: 1,
 
         memberList: [], //成员列表
@@ -204,8 +245,34 @@
             this.$message.error(res.data.message)
         });
       },
+
       //编辑成员信息
-      handleClick(row) {},
+      handleClick(id,phone) {
+        this.editDialogFormVisible=true;
+        this.edit.id=id;
+        this.edit.phone=phone;
+      },
+      editMember(){
+        this.axios({
+          method:'post',
+          url:"http://localhost:3000/leader/updateMember",
+          data:{
+            id:this.edit.id,
+            phone:this.edit.phone
+          }
+        }).then(res=>{
+          if(res.data.code==200){
+            this.$message({
+              type:"success",
+              message:"信息修改成功！"
+            })
+            this.edit={}
+            this.getClubMember(1)
+            this.editDialogFormVisible=false;
+          }
+        })
+      },
+
 
       //删除成员
       handleRemove(row) {
@@ -280,7 +347,16 @@
         this.$router.replace('/leader/passage')
       },
 
-      onSubmit(row) {}
+      onSubmit(row) {},
+
+      //时间转换函数
+      renderTime:function(row, column) {
+        var date = new Date(row[column.property]).toJSON();
+        if (date == undefined) {
+          return "";
+        }
+        return new Date(+new Date(date) ).toISOString().replace(/T/g, ' ').replace(/\.[\d]{3}Z/, '')
+      },
     }
   };
 </script>

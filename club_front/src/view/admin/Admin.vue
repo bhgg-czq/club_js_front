@@ -9,11 +9,11 @@
           <el-row class="tac">
             <el-col>
               <el-menu default-active="1" class="el-menu-vertical-demo" @select="handleSelect">
-                <el-menu-item index="1" @click="getWaittoPassa(0)">
+                <el-menu-item index="1" @click="getWaittoPassa()">
                   <i class="el-icon-menu"  ></i>
                   <span slot="title">待审核</span>
                 </el-menu-item>
-                <el-menu-item index="2"  @click="getWaittoPassa(1)">
+                <el-menu-item index="2"  @click="getAlreadyPassa()">
                   <i class="el-icon-document"></i>
                   <span slot="title">已审核</span>
                 </el-menu-item>
@@ -26,7 +26,7 @@
           </el-row>
         </el-aside>
         <el-main>
-          <div class="search">
+          <div class="search" v-if="this.switch !== 3">
             <el-form :inline="true" class="demo-form-inline">
               <el-form-item label="活动名称">
                 <el-input style="width: 150px" placeholder=""></el-input>
@@ -48,38 +48,19 @@
                 </el-select>
               </el-form-item>
               <el-form-item>
-                <el-button type="primary" @click="handleSearch">查询</el-button>
+                <el-button type="primary" @click="">查询</el-button>
               </el-form-item>
 
               <el-form-item>
-                <el-button type="primary" @click="onSubmit">导出数据</el-button>
+                <el-button type="primary" @click="">导出数据</el-button>
               </el-form-item>
             </el-form>
           </div>
 
-          <div class="card">
-            <template>
-              <el-table :data="aList" border style="width: 100%">
-                <el-table-column type="selection" width="55"></el-table-column>
-                <el-table-column prop="apply_date" label="申请日期" width="120"></el-table-column>
-                <el-table-column prop="items[0].name" label="社团名称" width="180"></el-table-column>
-                <el-table-column prop="items[0].college" label="所属分院" width="180"></el-table-column>
-                <el-table-column prop="name" label="活动名称" width="180"></el-table-column>
-                <el-table-column prop="cName" label="活动地点" width="150"></el-table-column>
-                <!-- <el-table-column prop="number" label="限定人数" width="80"></el-table-column> -->
-                <el-table-column prop="start_time" label="活动时间" width="180"></el-table-column>
-                <el-table-column prop="a_pass" label="审核结果" width="80"></el-table-column>
+          <AdminWait v-if="this.switch === 1"></AdminWait>
+          <AdminPass v-if = "this.switch === 2"></AdminPass>
+          <AdminActivityDetail v-show="this.switch === 3"></AdminActivityDetail>
 
-
-                <el-table-column fixed="right" label="操作" width="170">
-                  <template slot-scope="scope">
-                    <el-button @click="handlePass(scope.row)" type="primary" size="mini">通过</el-button>
-                    <el-button @click="handleUnPass(scope.row)" type="danger" size="mini">不通过</el-button>
-                  </template>
-                </el-table-column>
-              </el-table>
-            </template>
-          </div>
 
 
         </el-main>
@@ -89,21 +70,35 @@
 </template>
 
 <script>
+
+  import AdminWait from "../../components/AdminWaitToPass";
+  import AdminPass from "../../components/AdminPass";
+  import AdminActivityDetail from "../../components/AdminActivityDetail";
   export default {
     el:'#admin',
+    components:{
+      AdminActivityDetail,
+      AdminPass,
+      AdminWait
+    },
     data() {
       return {
-        adminId:'1',//默认值为1
-        activityId:'',
-        aList:[],
+        adminId:'',
+        switch:1,
+        type:''
 
       };
     },
     created() {
       this.adminId = localStorage.getItem("id")
+      this.type = localStorage.getItem("type")
+      this.$bus.$on('activitydetail',(data) =>{
+        this.getDetail(data)
+      })
+      this.$bus.$on('towait',(data) =>{
+        this.switch = 1
+      })
       console.log(this.adminId)//疑问这里不会有异步问题吗
-      this.getWaittoPassa(0);
-
     },
     methods: {
       //选中的当前菜单
@@ -111,56 +106,18 @@
         console.log("选中");
       },
       //待审核列表
-      getWaittoPassa(index) {
-        this.axios.get(`http://localhost:3000/admin/waittopassa?aid=${this.adminId}&index=${index}`).then(res => {
-          console.log(this.adminId+index)
-          console.log(res);
-
-          this.aList = res.data.activities;
-        });
+      getWaittoPassa() {
+        this.switch = 1
+        this.$bus.$emit('getwait',{"id":this.id,"type":this.type})
       },
       //已审核列表
-      // getAlreadyPassa() {
-      //   this.axios.get(`http://localhost:8181/api/admin/passa/${this.adminId}`).then(res => {
-      //     // console.log(res);
-      //     this.aList = res.data;
-      //     for(var i = 0;i<this.aList.length;i++){
-      //       if(this.aList[i].bPass === 1)
-      //         this.aList[i].isPass = '通过'
-      //       else this.aList[i].isPass = '未通过'
-      //     }
-      //     console.log(this.aList)
-      //   });
-      // },
-      //通过活动
-      handlePass(row) {
-        this.activityId = row.aId
-        this.axios.post(`http://localhost:3000/admin/passactivity/${this.adminId}/${this.activityId}`)
-          .then(res => {
-            console.log(res)
-            if(res.status === 200){
-              this.activityId = ''
-              this.getWaittoPassa()
-            }
-            else{
-              window.alert("审核失败")
-            }
-          })
+      getAlreadyPassa() {
+        this.switch = 2
+        this.$bus.$emit('getalready',{"id":this.id,"type":this.type})
       },
-
-      //拒绝通过
-      handleUnPassrow(row) {
-        this.aid = row.aId
-        this.axios.post(`http://localhost:8181/api/admin/cancelactivity/${this.activitId}`)
-          .then(res => {
-            // console.log(res)
-            if(res.status === 200){
-              this.getWaittoPassa()
-            }
-            else{
-              window.alert("审核失败")
-            }
-          })
+      getDetail(row){
+        this.switch = 3;
+        this.$bus.$emit('getactivitydetail',row)
       },
       //搜索
       handleSearch() {},

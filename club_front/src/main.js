@@ -13,6 +13,9 @@ import axios from 'axios'
 import VueAxios from 'vue-axios'
 Vue.use(VueAxios, axios)
 
+import VueBus from './vue-bus'
+Vue.use(VueBus)
+
 Vue.config.productionTip = false
 
 
