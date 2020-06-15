@@ -120,11 +120,9 @@
             this.step=2;
           }
 
-
           this.getRoList();
           this.getPassList();
           this.getWaitPass();
-
          // 判断步骤三状态，若有数据则状态为失败
           this.getNotPass();
       },
@@ -186,7 +184,7 @@
             this.$set(item, 'disabled', false)
           })
 
-          //lamda实现函数复合（函数式编程）
+          //ramda实现函数复合（函数式编程）
           var sation1= re=>new Date(re.startTime).getTime() > (this.ruleForm.time[1]+28800000)
           var sation2= re=>new Date(re.endTime).getTime() < (this.ruleForm.time[0]+28800000)
           var isEven= this.$R.either(sation1,sation2)

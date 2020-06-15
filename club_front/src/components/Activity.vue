@@ -300,7 +300,7 @@
             })
 
             _this.addDialogFormVisible=false
-            _this.getwaitActList(0);
+            _this.getwaitActList(_this.type);
             _this.ruleForm={}
         })
 
