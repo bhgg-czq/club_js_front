@@ -214,6 +214,7 @@
       //选中的当前菜单
       handleSelect() {
         console.log("选中");
+        console.log(_this.$R.add(1, 2))
       },
       //获得活动地点列表
       getRoList(){

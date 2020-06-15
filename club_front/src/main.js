@@ -16,6 +16,9 @@ Vue.use(VueAxios, axios)
 import VueBus from './vue-bus'
 Vue.use(VueBus)
 
+import VueRamda from 'vue-ramda'
+Vue.use(VueRamda)
+
 Vue.config.productionTip = false
 
 

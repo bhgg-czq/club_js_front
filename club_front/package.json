@@ -14,8 +14,10 @@
     "element-ui": "^2.13.2",
     "iview": "^3.5.4",
     "moment": "^2.26.0",
+    "ramda": "^0.27.0",
     "vue": "^2.5.2",
     "vue-axios": "^2.1.5",
+    "vue-ramda": "^1.0.0",
     "vue-router": "^3.0.1"
   },
   "devDependencies": {

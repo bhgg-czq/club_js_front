@@ -88,6 +88,8 @@
 </template>
 
 <script>
+    import complement from "ramda/src/complement";
+
     export default {
         name: "Progress",
         data(){
@@ -114,10 +116,8 @@
       created() {
           this.msg=localStorage.getItem('msg');
 
-          console.log(localStorage.getItem('apass'))
           if(localStorage.getItem('apass')==='true'){
             this.step=2;
-            console.log(this.step)
           }
 
 
@@ -132,7 +132,6 @@
         //waittoPass(正在审核的场地）
         getWaitPass(){
           this.axios.get("http://localhost:3000/leader/classroom/waitPass?aid="+localStorage.getItem('aid')).then(res=>{
-            console.log(res.data.activities)
             if(res.data.activities.length){
               var start= this.renderTime(res.data.activities[0].startTime);
               var end=this.renderTime(res.data.activities[0].endTime);
@@ -155,7 +154,6 @@
         //notPassList
         getNotPass(){
           this.axios.get("http://localhost:3000/leader/classroom/getunPass?aid="+localStorage.getItem('aid')).then(res=>{
-            console.log(localStorage.getItem('aid'))
             if(res.data.activities.length){
               this.notPassList=res.data.activities;
               this.step=2;
@@ -163,9 +161,7 @@
             }
             else{
               this.notPassList=null;
-              console.log(this.notPassList)
             }
-            //console.log(res.data)
 
           })
         },
@@ -174,7 +170,6 @@
         getRoList(){
           this.axios.get("http://localhost:3000/leader/listAllRoom").then(res=>{
             this.allList=res.data.roomlist;
-            console.log(res.data)
           })
         },
         //passList
@@ -182,8 +177,6 @@
           this.axios.get("http://localhost:3000/leader/classroom/getPass").then(res=>{
             if(res.data.code==200)
               this.passList=res.data.activities;
-            console.log("fdfdf"+this.passList)
-            console.log(this.passList)
           })
         },
         //allList(根据所选时间进行判断加属性）
@@ -193,32 +186,41 @@
             this.$set(item, 'disabled', false)
           })
 
-          for(var room of this.passList){
-            console.log("fdsfdsfsdfdsfdsfs")
-            console.log(room)
-            //将日期转换成时间戳进行比较
-            var start = new Date(room.startTime);
-            var start1=start.getTime(start);
+          //lamda实现函数复合（函数式编程）
+          var sation1= re=>new Date(re.startTime).getTime() > (this.ruleForm.time[1]+28800000)
+          var sation2= re=>new Date(re.endTime).getTime() < (this.ruleForm.time[0]+28800000)
+          var isEven= this.$R.either(sation1,sation2)
+          var filterList=this.$R.reject(isEven,this.passList)
 
-            var end = new Date(room.endTime);
-            var end1=end.getTime(end);
+          this.$R.forEach(room=>{
+            var rid=room.rId
+            var isEven1= re=>rid===re.roomid
+            var r=this.$R.find(isEven1,this.allList)
+            this.$set(r, 'disabled', true)
+          },filterList)
 
-            var s = this.ruleForm.time[0]+28800000;
-            var e = this.ruleForm.time[1]+28800000;
-
-            var rid=room.rId;
-
-            if(!(s>end1 || e<start1)){
-              for(var r of this.allList){
-                console.log(r.id);
-                if(r.roomid==rid){
-                  console.log(r.roomid);
-                  this.$set(r, 'disabled', true)
-                  break;
-                }
-              }
-            }
-          }
+          // for(var room of this.passList){
+          //   //将日期转换成时间戳进行比较
+          //   var start = new Date(room.startTime);
+          //   var start1=start.getTime(start);
+          //
+          //   var end = new Date(room.endTime);
+          //   var end1=end.getTime(end);
+          //
+          //   var s = this.ruleForm.time[0]+28800000;
+          //   var e = this.ruleForm.time[1]+28800000;
+          //
+          //   var rid=room.rId;
+          //
+          //   if(!(s>end1 || e<start1)){
+          //     for(var r of this.allList){
+          //       if(r.roomid==rid){
+          //         this.$set(r, 'disabled', true)
+          //         break;
+          //       }
+          //     }
+          //   }
+          // }
         },
 
         handleAddress(){
@@ -239,8 +241,8 @@
             data:{
               aid:localStorage.getItem('aid'),
               rid:this.ruleForm.className,
-              start:this.ruleForm.time[0],
-              end:this.ruleForm.time[1]
+              start:this.ruleForm.time[0]+28800000,
+              end:this.ruleForm.time[1]+28800000
             }
           }).then(res=>{
             if (res.data.code===200){
@@ -248,21 +250,35 @@
                 message: '申请场地成功！'
               })
 
-              for(var r of _this.allList)
-                if(r.roomid == _this.ruleForm.className){
-                  var start= this.renderTime(this.ruleForm.time[0]);
-                  var end=this.renderTime(this.ruleForm.time[1]);
-                  var name=r.name;
+              // for(var r of _this.allList)
+              //   if(r.roomid == _this.ruleForm.className){
+              //     var start= this.renderTime(this.ruleForm.time[0]);
+              //     var end=this.renderTime(this.ruleForm.time[1]);
+              //     var name=r.name;
+              //
+              //     this.waitPass="于 "+start+" 到 "+end+" 使用 "+name+" 的场地申请已提交，请耐心等待";
+              //
+              //     //场地选择按钮禁用
+              //     this.select=true;
+              //   }
 
-                  this.waitPass="于 "+start+" 到 "+end+" 使用 "+name+" 的场地申请已提交，请耐心等待";
 
-                  //场地选择按钮禁用
-                  this.select=true;
-                }
+              //ramda:find+谓词函数
+              var isEven = r => r.roomid == _this.ruleForm.className
+              var one=_this.$R.find(isEven,_this.allList)
+              var start= this.renderTime(this.ruleForm.time[0]+28800000);
+              var end=this.renderTime(this.ruleForm.time[1]+28800000);
+              var name=one.name;
+
+              this.waitPass="于 "+start+" 到 "+end+" 使用 "+name+" 的场地申请已提交，请耐心等待";
+
+              //场地选择按钮禁用
+              this.select=true;
 
               _this.addDialogFormVisible=false
               _this.ruleForm={}
             }
+
 
           })
         }

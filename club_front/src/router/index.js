@@ -3,7 +3,7 @@ import Router from 'vue-router'
 
 import Admin from '../view/admin/Admin.vue'
 import Login from '../view/login/Login2.vue'
-import Leader from '../view/leader/Leader'
+import Leader from '../view/leader/Leader.vue'
 
 Vue.use(Router)
 
